@@ -7,8 +7,6 @@ RUN set -ex; \
 
 RUN mkdir -p /go/src/github.com/eefth/f3-assignment
 ADD ./app /go/src/github.com/eefth/f3-assignment/app
-
-#RUN mkdir -p go/src/github.com/eefth/client
 ADD ./client /go/src/github.com/eefth/f3-assignment/client
 
 WORKDIR /go/src/github.com/eefth/f3-assignment/client/
