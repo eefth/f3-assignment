@@ -30,18 +30,25 @@ func TestCreateAccount_success(t *testing.T) {
 
 	uri := "/v1/organisation/accounts/"
 
+	var body = GetAccountResponse{Gdata: Gdata{Type: "accounts", ID: "0673746b-8dd3-4bd2-b398-941bdf2865df", OrganisationID: "9864746b-8dd3-4bd2-b398-941bdf2865df"}}
+
 	server := newTestServer(uri, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(body)
 	})
 
 	defer server.Close()
 	response, _ := CreateAccount(server.URL, account)
+
+	createdAccount := UnmarshallCreateAccountResponse(response)
 
 	msg := fmt.Sprintf("TestCreateAccount failed. Status code expected to be %d but it was %d", http.StatusOK, response.StatusCode)
 
 	if response.StatusCode != 201 {
 		t.Errorf(msg)
 	}
+	assert.EqualValues(t, createdAccount.Cdata.ID, "0673746b-8dd3-4bd2-b398-941bdf2865df")
+	assert.EqualValues(t, createdAccount.Cdata.OrganisationID, "9864746b-8dd3-4bd2-b398-941bdf2865df")
 }
 
 func TestCreateAccount_whenMarshallerFails_shouldReturnError(t *testing.T) {
@@ -52,8 +59,11 @@ func TestCreateAccount_whenMarshallerFails_shouldReturnError(t *testing.T) {
 
 	uri := "/v1/organisation/accounts/"
 
+	var errorBody = GetAccountResponse{Gdata: Gdata{Type: "accounts", ID: "0673746b-8dd3-4bd2-b398-941bdf2865df", OrganisationID: "9864746b-8dd3-4bd2-b398-941bdf2865df"}}
+
 	server := newTestServer(uri, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(errorBody)
 	})
 
 	Marshaller = func(v interface{}) ([]byte, error) {
@@ -67,12 +77,12 @@ func TestCreateAccount_whenMarshallerFails_shouldReturnError(t *testing.T) {
 	assert.EqualValues(t, fmt.Sprint(err), "Marshaller exception")
 }
 
-func TestGetAccount_whenForm3ApiReturnesOK(t *testing.T) {
+func TestGetAccount_success(t *testing.T) {
 
 	accountID := guuid.New().String()
 	uri := "/v1/organisation/accounts/"
 
-	var body = GetAccountResponse{Gdata: Gdata{Type: "accounts", ID: "0673746b-8dd3-4bd2-b398-941bdf2865df"}}
+	var body = Account{Cdata: Cdata{Type: "accounts", ID: "0673746b-8dd3-4bd2-b398-941bdf2865df"}}
 
 	server := newTestServer(uri, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
