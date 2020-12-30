@@ -8,7 +8,7 @@ There are 2 folders containing the src: app and client. The app folder contains 
 
 The client folder contians the functions which call the form3 api. Theres is also a *test.go file there.
 
-The tests exist in account_test.go. There the local form3 api has been mocked using the so called mux server.
+The tests exist in accounts_test.go. There the local form3 api has been mocked using the so called mux server.
 In some cases json.Marshall and Unmarshall are mocked too. Current test-coverage is about 82.7%.
 
 You can run the main method to create, delete, list, get account from the form3 api served by the docker-compose file. 
