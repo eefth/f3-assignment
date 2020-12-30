@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -31,14 +30,7 @@ func DeleteAccount(host, accountID string, version int) (statusCode int) {
 	}
 	defer resp.Body.Close()
 
-	// Read Response Body
-	_, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	// Display Results
+	// Display Response code
 	fmt.Println("response Status : ", resp.StatusCode)
 
 	return resp.StatusCode
