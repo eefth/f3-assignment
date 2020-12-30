@@ -51,6 +51,30 @@ func TestCreateAccount_success(t *testing.T) {
 	assert.EqualValues(t, createdAccount.Cdata.OrganisationID, "9864746b-8dd3-4bd2-b398-941bdf2865df")
 }
 
+func TestCreateAccount_whenForm3ApiReturns500_shouldReturn500(t *testing.T) {
+
+	accountID := guuid.New().String()
+	organizationID := guuid.New().String()
+	account := CreateRequestBody(accountID, organizationID)
+
+	uri := "/v1/organisation/accounts/"
+
+	server := newTestServer(uri, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	})
+
+	defer server.Close()
+	response, err := CreateAccount(server.URL, account)
+
+	msg := fmt.Sprintf("TestCreateAccount failed. Status code expected to be %d but it was %d", http.StatusInternalServerError, response.StatusCode)
+
+	if response.StatusCode != 500 {
+		t.Errorf(msg)
+	}
+
+	assert.Nil(t, err)
+}
+
 func TestCreateAccount_whenMarshallerFails_shouldReturnError(t *testing.T) {
 
 	accountID := guuid.New().String()
@@ -59,11 +83,11 @@ func TestCreateAccount_whenMarshallerFails_shouldReturnError(t *testing.T) {
 
 	uri := "/v1/organisation/accounts/"
 
-	var errorBody = GetAccountResponse{Gdata: Gdata{Type: "accounts", ID: "0673746b-8dd3-4bd2-b398-941bdf2865df", OrganisationID: "9864746b-8dd3-4bd2-b398-941bdf2865df"}}
+	var body = GetAccountResponse{Gdata: Gdata{Type: "accounts", ID: "0673746b-8dd3-4bd2-b398-941bdf2865df", OrganisationID: "9864746b-8dd3-4bd2-b398-941bdf2865df"}}
 
 	server := newTestServer(uri, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(errorBody)
+		json.NewEncoder(w).Encode(body)
 	})
 
 	Marshaller = func(v interface{}) ([]byte, error) {
