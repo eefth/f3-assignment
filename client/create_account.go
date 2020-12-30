@@ -8,6 +8,13 @@ import (
 	"net/http"
 )
 
+// Marshaller overrides build in json.Marshall
+var Marshaller func(v interface{}) ([]byte, error)
+
+func init() {
+	Marshaller = json.Marshal
+}
+
 // Account ...
 type Account struct {
 	Cdata Cdata `json:"data"`
@@ -30,7 +37,7 @@ type Cdata struct {
 	Cattributes    Cattributes `json:"attributes"`
 }
 
-// CreateRequestBody Creates a struct of type Account
+// CreateRequestBody creates a struct of type Account
 func CreateRequestBody(accountID, organisationID string) (account *Account) {
 
 	account = &Account{
@@ -50,33 +57,36 @@ func CreateRequestBody(accountID, organisationID string) (account *Account) {
 	return account
 }
 
-// CreateAccount Calls the form3 api with the specified accountID and organizationID
-func CreateAccount(host, accountID, organisationID string) (statusCode int, createdAccount *Account) {
+// CreateAccount calls the form3 api with the specified accountID and organizationID
+func CreateAccount(host string, account *Account) (*http.Response, error) {
 
-	fmt.Println("in CreateAccount.go")
+	fmt.Println("in CreateAccount.go with id", account.Cdata.ID)
 
-	account := CreateRequestBody(accountID, organisationID)
-
-	fmt.Println("account to create with id", account.Cdata.ID)
-
-	b := new(bytes.Buffer)
-	json.NewEncoder(b).Encode(account)
+	jsonBytes, err := Marshaller(account)
+	if err != nil {
+		return nil, err
+	}
 
 	uri := "/v1/organisation/accounts"
 
-	res, err := http.Post(host+uri, "application/vnd.api+json", b)
-
+	request, err := http.NewRequest(http.MethodPost, host+uri, bytes.NewReader(jsonBytes))
 	if err != nil {
-		fmt.Printf("The HTTP request failed with error %s\n", err)
-		return
+		return nil, err
 	}
 
-	byteArr, _ := ioutil.ReadAll(res.Body)
+	request.Header.Set("Content-Type", "application/vnd.api+json")
+	client := &http.Client{}
+	return client.Do(request)
+}
+
+// UnmarshallCreateAccountResponse returns the  Account struct from the http.Response
+func UnmarshallCreateAccountResponse(response *http.Response) (createdAccount *Account) {
+
+	byteArr, _ := ioutil.ReadAll(response.Body)
 
 	createdAccount = &Account{}
 	json.Unmarshal(byteArr, &createdAccount)
 	fmt.Println("Created account", createdAccount)
 
-	return res.StatusCode, createdAccount
-
+	return createdAccount
 }

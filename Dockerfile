@@ -3,7 +3,8 @@ FROM golang:1.15.6-alpine3.12
 RUN set -ex; \
     apk update; \ 
     apk add --no-cache git; \
-    go get github.com/google/uuid 
+    go get github.com/google/uuid github.com/stretchr/testify/assert 
+    
 
 RUN mkdir -p /go/src/github.com/eefth/f3-assignment
 ADD ./app /go/src/github.com/eefth/f3-assignment/app

@@ -19,12 +19,15 @@ func main() {
 	organisationID = guuid.New().String()
 
 	// create the account
-	createAccountStatusCode, createAccountResponse := client.CreateAccount(host, accountID, organisationID)
-	fmt.Printf("Create Account response status code %d\nCreated AccountId %s", createAccountStatusCode, createAccountResponse.Cdata.ID)
+	account := client.CreateRequestBody(accountID, organisationID)
+	createAccountResponse, _ := client.CreateAccount(host, account)
+	createdAccount := client.UnmarshallCreateAccountResponse(createAccountResponse)
+	fmt.Printf("Created Account with AccountId %s", createdAccount.Cdata.ID)
 
 	// fetch the account
-	getAccountStatusCode, getAccountResponse := client.GetAccount(host, accountID)
-	fmt.Printf("Get Account response status code %d\nFetched AccountId %s", getAccountStatusCode, getAccountResponse.Gdata.ID)
+	getAccountResponse, _ := client.GetAccount(host, accountID)
+	existingAccount := client.UnmarshallGetAccountResponse(getAccountResponse)
+	fmt.Printf("Get Existing Account with AccountId %s", existingAccount.Gdata.ID)
 
 	// get all existing accounts in db and print them out
 	accounts := client.GatherAccounts(host, pageSize)

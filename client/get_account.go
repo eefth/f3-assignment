@@ -8,6 +8,13 @@ import (
 	"time"
 )
 
+// Unmarshaller overrides build-in json.Unmarshal
+var Unmarshaller func(data []byte, v interface{}) error
+
+func init() {
+	Unmarshaller = json.Unmarshal
+}
+
 // Gattributes ...
 type Gattributes struct {
 	AlternativeBankAccountNames interface{} `json:"alternative_bank_account_names"`
@@ -41,28 +48,30 @@ type GetAccountResponse struct {
 }
 
 // GetAccount Calls the form3 api with the specified accountID
-func GetAccount(host, accountID string) (statusCode int, account *GetAccountResponse) {
+func GetAccount(host, accountID string) (*http.Response, error) /*(statusCode int, account *GetAccountResponse)*/ {
 	fmt.Println("in GetAccount, id", accountID)
 
 	uri := "/v1/organisation/accounts/" + accountID
 
-	response, err := http.Get(host + uri)
+	request, err := http.NewRequest(http.MethodGet, host+uri, nil) //http.Get(host + uri)
 
 	if err != nil {
-		fmt.Print(err.Error())
-		return
+		fmt.Print(err)
+		return nil, err
 	}
 
-	responseData, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	client := &http.Client{}
+	return client.Do(request)
+}
 
-	json.Unmarshal(responseData, &account)
+// UnmarshallGetAccountResponse returns the  Account struct from the http.Response
+func UnmarshallGetAccountResponse(response *http.Response) (account *GetAccountResponse) {
 
-	fmt.Println("Got account", account)
+	byteArr, _ := ioutil.ReadAll(response.Body)
 
-	return response.StatusCode, account
+	account = &GetAccountResponse{}
+	Unmarshaller(byteArr, &account)
+	fmt.Println("Created account", account)
 
+	return account
 }
