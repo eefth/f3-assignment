@@ -48,12 +48,12 @@ type GetAccountResponse struct {
 }
 
 // GetAccount Calls the form3 api with the specified accountID
-func GetAccount(host, accountID string) (*http.Response, error) /*(statusCode int, account *GetAccountResponse)*/ {
+func GetAccount(host, accountID string) (*http.Response, error) {
 	fmt.Println("in GetAccount, id", accountID)
 
 	uri := "/v1/organisation/accounts/" + accountID
 
-	request, err := http.NewRequest(http.MethodGet, host+uri, nil) //http.Get(host + uri)
+	request, err := http.NewRequest(http.MethodGet, host+uri, nil)
 
 	if err != nil {
 		fmt.Print(err)
