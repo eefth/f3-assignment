@@ -136,21 +136,48 @@ func TestGetAccount_whenForm3ApiReturnes500_shouldReturn500(t *testing.T) {
 	assert.EqualValues(t, getAccountResponse.StatusCode, 500)
 }
 
-func TestListAccounts_whenForm3ApiReturnsOK(t *testing.T) {
+func TestListAccounts_success(t *testing.T) {
+
+	pageNumber := 1
+	pageSize := 30
+	uri := "/v1/organisation/accounts"
+
+	var body = GetAccountsResponse{Data: []Data{{Type: "accounts", ID: "0673746b-8dd3-4bd2-b398-941bdf2865df"},
+		{Type: "accounts", ID: "9673746b-8dd3-4bd2-b398-941bdf2865df"}}}
+
+	server := newTestServer(uri, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(body)
+	})
+	defer server.Close()
+	statusCode, getAccountsResponse := ListAccounts(server.URL, pageNumber, pageSize)
+
+	msg := fmt.Sprintf("TestListAccounts failed. Status code expected to be %d but it was %d", http.StatusOK, statusCode)
+
+	if statusCode != 200 {
+		t.Errorf(msg)
+	}
+
+	assert.EqualValues(t, len(getAccountsResponse.Data), 2)
+	assert.EqualValues(t, getAccountsResponse.Data[0].ID, "0673746b-8dd3-4bd2-b398-941bdf2865df")
+	assert.EqualValues(t, getAccountsResponse.Data[1].ID, "9673746b-8dd3-4bd2-b398-941bdf2865df")
+}
+
+func TestListAccounts_whenForm3Returns500_shouldReturn500(t *testing.T) {
 
 	pageNumber := 1
 	pageSize := 30
 	uri := "/v1/organisation/accounts"
 
 	server := newTestServer(uri, func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusInternalServerError)
 	})
 	defer server.Close()
 	statusCode, _ := ListAccounts(server.URL, pageNumber, pageSize)
 
-	msg := fmt.Sprintf("TestListAccounts failed. Status code expected to be %d but it was %d", http.StatusOK, statusCode)
+	msg := fmt.Sprintf("TestListAccounts failed. Status code expected to be %d but it was %d", http.StatusInternalServerError, statusCode)
 
-	if statusCode != 200 {
+	if statusCode != 500 {
 		t.Errorf(msg)
 	}
 }
@@ -183,7 +210,6 @@ func TestGatherAccounts_WhenListAccountsReturns200AndTwoResults(t *testing.T) {
 	server := newTestServer(uri, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(body)
-
 	})
 	defer server.Close()
 
@@ -194,7 +220,7 @@ func TestGatherAccounts_WhenListAccountsReturns200AndTwoResults(t *testing.T) {
 	}
 }
 
-func TestDeleteAccount_whenForm3ApiReturns204(t *testing.T) {
+func TestDeleteAccount_success(t *testing.T) {
 
 	accountID := guuid.New().String()
 	version := 0
@@ -209,6 +235,25 @@ func TestDeleteAccount_whenForm3ApiReturns204(t *testing.T) {
 	msg := fmt.Sprintf("TestDeleteAccount failed. Status code expected to be %d but it was %d", http.StatusNoContent, statusCode)
 
 	if statusCode != http.StatusNoContent {
+		t.Errorf(msg)
+	}
+}
+
+func TestDeleteAccount_whenForm3ApiReturns404_shouldReturn404(t *testing.T) {
+
+	accountID := guuid.New().String()
+	version := 0
+	uri := "/v1/organisation/accounts/"
+
+	server := newTestServer(uri, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+	defer server.Close()
+	statusCode := DeleteAccount(server.URL, accountID, version)
+
+	msg := fmt.Sprintf("TestDeleteAccount failed. Status code expected to be %d but it was %d", http.StatusNotFound, statusCode)
+
+	if statusCode != http.StatusNotFound {
 		t.Errorf(msg)
 	}
 }
