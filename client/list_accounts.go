@@ -1,7 +1,6 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -38,27 +37,31 @@ type Data struct {
 }
 
 // ListAccounts calls the form3 api with the specified pageNumber and pageSize
-func ListAccounts(host string, pageNumber, pageSize int) (statusCode int, accounts *GetAccountsResponse) {
+func ListAccounts(host string, pageNumber, pageSize int) (*http.Response, error /*statusCode int, accounts *GetAccountsResponse*/) {
 	fmt.Println("in ListAccounts", "pageNumber", pageNumber, "pageSize", pageSize)
 
 	uri := "/v1/organisation/accounts?"
 
-	response, err := http.Get(host + uri + "page[number]=" + fmt.Sprint(pageNumber) + "&page[size]=" + fmt.Sprint(pageSize))
+	request, err := http.NewRequest(http.MethodGet, host+uri+"page[number]="+fmt.Sprint(pageNumber)+"&page[size]="+fmt.Sprint(pageSize), nil)
 
 	if err != nil {
 		fmt.Println(err)
-		return
+		return nil, err
 	}
 
-	responseData, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	client := &http.Client{}
+	return client.Do(request)
+}
 
-	json.Unmarshal(responseData, &accounts)
+// UnmarshallGetAccountsResponse returns the  GetAccountsResponse struct from the http.Response
+func UnmarshallGetAccountsResponse(response *http.Response) (accounts *GetAccountsResponse) {
 
-	return response.StatusCode, accounts
+	byteArr, _ := ioutil.ReadAll(response.Body)
+
+	accounts = &GetAccountsResponse{}
+	Unmarshaller(byteArr, &accounts)
+
+	return accounts
 }
 
 // GatherAccounts gets the list of all existing accounts in db by calling
@@ -69,11 +72,13 @@ func GatherAccounts(host string, pageSize int) (allAccs []Data) {
 	listAccountsStatusCode := 200
 
 	for pageNumber := 0; listAccountsStatusCode == 200; pageNumber = pageNumber + 1 {
-		listAccountsStatusCodeCurrent, accounts := ListAccounts(host, pageNumber, pageSize)
 
-		listAccountsStatusCode = listAccountsStatusCodeCurrent
+		getAccountsResponse, err := ListAccounts(host, pageNumber, pageSize)
 
-		if listAccountsStatusCode == 200 && len(accounts.Data) > 0 {
+		listAccountsStatusCode = getAccountsResponse.StatusCode
+		accounts := UnmarshallGetAccountsResponse(getAccountsResponse)
+
+		if err == nil && listAccountsStatusCode == 200 && len(accounts.Data) > 0 {
 			for _, d := range accounts.Data {
 				allAccs = append(allAccs, d)
 			}

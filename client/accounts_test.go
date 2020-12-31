@@ -150,17 +150,20 @@ func TestListAccounts_success(t *testing.T) {
 		json.NewEncoder(w).Encode(body)
 	})
 	defer server.Close()
-	statusCode, getAccountsResponse := ListAccounts(server.URL, pageNumber, pageSize)
+	getAccountsResponse, err := ListAccounts(server.URL, pageNumber, pageSize)
 
-	msg := fmt.Sprintf("TestListAccounts failed. Status code expected to be %d but it was %d", http.StatusOK, statusCode)
+	msg := fmt.Sprintf("TestListAccounts failed. Status code expected to be %d but it was %d", http.StatusOK, getAccountsResponse.StatusCode)
 
-	if statusCode != 200 {
+	if getAccountsResponse.StatusCode != http.StatusOK {
 		t.Errorf(msg)
 	}
 
-	assert.EqualValues(t, len(getAccountsResponse.Data), 2)
-	assert.EqualValues(t, getAccountsResponse.Data[0].ID, "0673746b-8dd3-4bd2-b398-941bdf2865df")
-	assert.EqualValues(t, getAccountsResponse.Data[1].ID, "9673746b-8dd3-4bd2-b398-941bdf2865df")
+	accounts := UnmarshallGetAccountsResponse(getAccountsResponse)
+
+	assert.Nil(t, err)
+	assert.EqualValues(t, len(accounts.Data), 2)
+	assert.EqualValues(t, accounts.Data[0].ID, "0673746b-8dd3-4bd2-b398-941bdf2865df")
+	assert.EqualValues(t, accounts.Data[1].ID, "9673746b-8dd3-4bd2-b398-941bdf2865df")
 }
 
 func TestListAccounts_whenForm3Returns500_shouldReturn500(t *testing.T) {
@@ -173,11 +176,11 @@ func TestListAccounts_whenForm3Returns500_shouldReturn500(t *testing.T) {
 		w.WriteHeader(http.StatusInternalServerError)
 	})
 	defer server.Close()
-	statusCode, _ := ListAccounts(server.URL, pageNumber, pageSize)
+	getAccountsResponse, _ := ListAccounts(server.URL, pageNumber, pageSize)
 
-	msg := fmt.Sprintf("TestListAccounts failed. Status code expected to be %d but it was %d", http.StatusInternalServerError, statusCode)
+	msg := fmt.Sprintf("TestListAccounts failed. Status code expected to be %d but it was %d", http.StatusInternalServerError, getAccountsResponse.StatusCode)
 
-	if statusCode != 500 {
+	if getAccountsResponse.StatusCode != http.StatusInternalServerError {
 		t.Errorf(msg)
 	}
 }
