@@ -16,7 +16,7 @@ You can run the main method to create, delete, list, get account from the form3 
 Regarding the list accounts, the main method calls a helper method which calls then another method, both in the client package. The latter method calls the form3 api. At the end, all the existing accounts in db are fetched and printed in the main.go. The pageSize request parameter has been put very low and equal to 6 in such a way to require a few iterations(pages) in order to gather all accounts from db.
 
 The dockerCompose folder is a copy of the form3tech-oss/interview-accountapi but with the docker-compose.yml file updated as requested.
-I have included also the Dockerfile used to build the image that docker-compose.yml will use.
+I have included also the Dockerfile used to build the image that docker-compose.yml will use. As base image an Alpine one is used which is light weight.
 
 ## How to run the docker-compose and see the go tests running
 From the folder dockerCompose run the following: docker-compose up
