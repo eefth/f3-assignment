@@ -1,5 +1,5 @@
 # f3-assignment
-My name is Efthimios Efthimiou. I am new to go as my experience is one week old only. During that week, i saw how much exciting is to code with go. 
+My name is Efthimios Efthimiou. I am new to go as my experience is 10 days old only. During that week, i saw how much exciting is to code with go. 
 Comparing to java, a field that i work more than 10 years, i see that go is a more modern language, as less configuration is needed (recall maven, dependencies, spring e.t.c).
 Also, go is faster and as people say, go is super in concurrency.
 
