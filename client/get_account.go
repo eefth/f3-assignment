@@ -47,7 +47,7 @@ type GetAccountResponse struct {
 	Glinks Glinks `json:"links"`
 }
 
-// GetAccount Calls the form3 api with the specified accountID
+// GetAccount calls the form3 api with the specified accountID
 func GetAccount(host, accountID string) (*http.Response, error) {
 	fmt.Println("in GetAccount, id", accountID)
 

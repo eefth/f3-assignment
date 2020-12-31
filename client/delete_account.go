@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// DeleteAccount Calls the form3 api with the specified accountID and version
+// DeleteAccount calls the form3 api with the specified accountID and version
 func DeleteAccount(host, accountID string, version int) (statusCode int) {
 
 	fmt.Println("in DeleteAccount, id", accountID, "version", version)

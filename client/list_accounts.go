@@ -37,7 +37,7 @@ type Data struct {
 	Attributes     Attributes `json:"attributes"`
 }
 
-// ListAccounts Calls the form3 api with the specified pageNumber and pageSize
+// ListAccounts calls the form3 api with the specified pageNumber and pageSize
 func ListAccounts(host string, pageNumber, pageSize int) (statusCode int, accounts *GetAccountsResponse) {
 	fmt.Println("in ListAccounts", "pageNumber", pageNumber, "pageSize", pageSize)
 
@@ -61,7 +61,7 @@ func ListAccounts(host string, pageNumber, pageSize int) (statusCode int, accoun
 	return response.StatusCode, accounts
 }
 
-// GatherAccounts Gets the list of all existing accounts in db by calling
+// GatherAccounts gets the list of all existing accounts in db by calling
 // the 'ListAccounts'
 func GatherAccounts(host string, pageSize int) (allAccs []Data) {
 
