@@ -27,6 +27,6 @@ From the folder app run the following: go run app.go
 ## How to run the tests
 Apart from watching the tests running when you do docker-compose up, you can also run them with the following ways
 - From the folder client run the following: go test
-- In the folder where the Dockerfile exists do: 
+- In the folder where the Dockerfile exists do:\ 
 docker build -t eefth/my-go-app . \
 docker run eefth/my-go-app
