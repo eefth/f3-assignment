@@ -1,19 +1,11 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
 )
-
-// Unmarshaller overrides build-in json.Unmarshal
-var Unmarshaller func(data []byte, v interface{}) error
-
-func init() {
-	Unmarshaller = json.Unmarshal
-}
 
 // Gattributes ...
 type Gattributes struct {
@@ -64,7 +56,7 @@ func GetAccount(host, accountID string) (*http.Response, error) {
 	return client.Do(request)
 }
 
-// UnmarshallGetAccountResponse returns the  Account struct from the http.Response
+// UnmarshallGetAccountResponse returns the  GetAccountResponse struct from the http.Response
 func UnmarshallGetAccountResponse(response *http.Response) (account *GetAccountResponse) {
 
 	byteArr, _ := ioutil.ReadAll(response.Body)

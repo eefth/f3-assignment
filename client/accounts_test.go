@@ -40,7 +40,7 @@ func TestCreateAccount_success(t *testing.T) {
 	defer server.Close()
 	response, _ := CreateAccount(server.URL, account)
 
-	createdAccount := UnmarshallCreateAccountResponse(response)
+	createdAccount, _ := UnmarshallCreateAccountResponse(response)
 
 	msg := fmt.Sprintf("TestCreateAccount failed. Status code expected to be %d but it was %d", http.StatusOK, response.StatusCode)
 
@@ -91,14 +91,14 @@ func TestCreateAccount_whenMarshallerFails_shouldReturnError(t *testing.T) {
 	})
 
 	Marshaller = func(v interface{}) ([]byte, error) {
-		return nil, errors.New("Marshaller exception")
+		return nil, errors.New("Marshaller faillure")
 	}
 
 	defer server.Close()
 	_, err := CreateAccount(server.URL, account)
 
 	assert.NotNil(t, err)
-	assert.EqualValues(t, fmt.Sprint(err), "Marshaller exception")
+	assert.EqualValues(t, fmt.Sprint(err), "Marshaller faillure")
 }
 
 func TestGetAccount_success(t *testing.T) {
@@ -277,7 +277,7 @@ func TestCreateRequestBody_WithAccountIdAndOrganisationId(t *testing.T) {
 	}
 }
 
-func TestUnmarshallCreateAccountResponse(t *testing.T) {
+func TestUnmarshallCreateAccountResponse_success(t *testing.T) {
 
 	actualAccountID := guuid.New().String()
 	actualOrganisationID := guuid.New().String()
@@ -292,9 +292,37 @@ func TestUnmarshallCreateAccountResponse(t *testing.T) {
 		Body:       body,
 	}
 
-	accountFromResponse := UnmarshallCreateAccountResponse(response)
+	accountFromResponse, err := UnmarshallCreateAccountResponse(response)
+
+	assert.Nil(t, err)
 	assert.EqualValues(t, actualAccountID, accountFromResponse.Cdata.ID)
 	assert.EqualValues(t, actualOrganisationID, accountFromResponse.Cdata.OrganisationID)
+}
+
+func TestUnmarshallCreateAccountResponse_whenUnmarshallerFails_returnsError(t *testing.T) {
+
+	actualAccountID := guuid.New().String()
+	actualOrganisationID := guuid.New().String()
+
+	account := CreateRequestBody(actualAccountID, actualOrganisationID)
+
+	jsonBytes, _ := json.Marshal(account)
+	body := ioutil.NopCloser(bytes.NewReader(jsonBytes))
+
+	response := &http.Response{
+		StatusCode: 201,
+		Body:       body,
+	}
+
+	Unmarshaller = func(data []byte, v interface{}) error {
+		return errors.New("Unmarshaller faillure")
+	}
+
+	accountFromResponse, err := UnmarshallCreateAccountResponse(response)
+
+	assert.Nil(t, accountFromResponse)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, fmt.Sprint(err), "Unmarshaller faillure")
 }
 
 func TestUnmarshallGetAccountResponse(t *testing.T) {
@@ -307,6 +335,8 @@ func TestUnmarshallGetAccountResponse(t *testing.T) {
 		StatusCode: 201,
 		Body:       body,
 	}
+
+	Unmarshaller = json.Unmarshal
 
 	accountFromResponse := UnmarshallGetAccountResponse(response)
 	assert.EqualValues(t, "0673746b-8dd3-4bd2-b398-941bdf2865df", accountFromResponse.Gdata.ID)

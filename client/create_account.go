@@ -2,18 +2,10 @@ package client
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 )
-
-// Marshaller overrides build in json.Marshall
-var Marshaller func(v interface{}) ([]byte, error)
-
-func init() {
-	Marshaller = json.Marshal
-}
 
 // Account ...
 type Account struct {
@@ -80,13 +72,17 @@ func CreateAccount(host string, account *Account) (*http.Response, error) {
 }
 
 // UnmarshallCreateAccountResponse returns the  Account struct from the http.Response
-func UnmarshallCreateAccountResponse(response *http.Response) (createdAccount *Account) {
+func UnmarshallCreateAccountResponse(response *http.Response) (*Account, error) {
 
 	byteArr, _ := ioutil.ReadAll(response.Body)
 
-	createdAccount = &Account{}
-	json.Unmarshal(byteArr, &createdAccount)
+	createdAccount := &Account{}
+	err := Unmarshaller(byteArr, &createdAccount)
+	if err != nil {
+		return nil, err
+	}
+
 	fmt.Println("Created account", createdAccount)
 
-	return createdAccount
+	return createdAccount, nil
 }

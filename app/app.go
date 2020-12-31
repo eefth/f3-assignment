@@ -21,7 +21,7 @@ func main() {
 	// create the account
 	account := client.CreateRequestBody(accountID, organisationID)
 	createAccountResponse, _ := client.CreateAccount(host, account)
-	createdAccount := client.UnmarshallCreateAccountResponse(createAccountResponse)
+	createdAccount, _ := client.UnmarshallCreateAccountResponse(createAccountResponse)
 	fmt.Printf("Created Account with AccountId %s", createdAccount.Cdata.ID)
 
 	// fetch the account
