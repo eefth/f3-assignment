@@ -9,7 +9,7 @@ Source code resides in 2 folders: app and client. The app folder contains the ma
 The client folder contains the functions that call the form3 api. Also, some json marshalling and unmarshalling functions reside there together with the structs and other variables. 
 
 In the client folder, there is also the file accounts_test.go which contains the tests. Inside that file, the local form3 api has been mocked using the so called mux server.
-In some cases json.Marshall and Unmarshall are mocked too. Currently the test-coverage is about 84.5%, a value got by the VS Code go extension api.
+In some cases json.Marshall and Unmarshall are mocked too. Currently the test-coverage is about 87.5%, a value got from the VS Code go extension api.
 
 You can run the main method to create, delete, list, get account from the form3 api served by the docker-compose file. 
 
