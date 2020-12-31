@@ -4,7 +4,7 @@ Comparing to java, a field that i work more than 10 years, i see that go is a mo
 Also, go is faster and as people say, go is super in concurrency.
 
 ## Project architecture
-There are 2 folders containing the src: app and client. The app folder contains the main method, which calls the functions containing in the client folder.
+There are 2 folders contained int the src directory: app and client. The app folder contains the main method, which calls the functions containing in the client folder.
 
 The client folder contians the functions which call the form3 api. Theres is also a *test.go file there.
 
