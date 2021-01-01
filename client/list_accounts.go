@@ -37,7 +37,7 @@ type Data struct {
 }
 
 // ListAccounts calls the form3 api with the specified pageNumber and pageSize
-func ListAccounts(host string, pageNumber, pageSize int) (*http.Response, error /*statusCode int, accounts *GetAccountsResponse*/) {
+func ListAccounts(host string, pageNumber, pageSize int) (*http.Response, error) {
 	fmt.Println("in ListAccounts", "pageNumber", pageNumber, "pageSize", pageSize)
 
 	uri := "/v1/organisation/accounts?"

@@ -233,11 +233,11 @@ func TestDeleteAccount_success(t *testing.T) {
 		w.WriteHeader(http.StatusNoContent)
 	})
 	defer server.Close()
-	statusCode := DeleteAccount(server.URL, accountID, version)
+	deleteAccountResponse, _ := DeleteAccount(server.URL, accountID, version)
 
-	msg := fmt.Sprintf("TestDeleteAccount failed. Status code expected to be %d but it was %d", http.StatusNoContent, statusCode)
+	msg := fmt.Sprintf("TestDeleteAccount failed. Status code expected to be %d but it was %d", http.StatusNoContent, deleteAccountResponse.StatusCode)
 
-	if statusCode != http.StatusNoContent {
+	if deleteAccountResponse.StatusCode != http.StatusNoContent {
 		t.Errorf(msg)
 	}
 }
@@ -252,11 +252,30 @@ func TestDeleteAccount_whenForm3ApiReturns404_shouldReturn404(t *testing.T) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 	defer server.Close()
-	statusCode := DeleteAccount(server.URL, accountID, version)
+	deleteAccountResponse, _ := DeleteAccount(server.URL, accountID, version)
 
-	msg := fmt.Sprintf("TestDeleteAccount failed. Status code expected to be %d but it was %d", http.StatusNotFound, statusCode)
+	msg := fmt.Sprintf("TestDeleteAccount failed. Status code expected to be %d but it was %d", http.StatusNotFound, deleteAccountResponse.StatusCode)
 
-	if statusCode != http.StatusNotFound {
+	if deleteAccountResponse.StatusCode != http.StatusNotFound {
+		t.Errorf(msg)
+	}
+}
+
+func TestDeleteAccount_whenForm3ApiReturns409_shouldReturn409(t *testing.T) {
+
+	accountID := guuid.New().String()
+	version := 0
+	uri := "/v1/organisation/accounts/"
+
+	server := newTestServer(uri, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusConflict)
+	})
+	defer server.Close()
+	deleteAccountResponse, _ := DeleteAccount(server.URL, accountID, version)
+
+	msg := fmt.Sprintf("TestDeleteAccount failed. Status code expected to be %d but it was %d", http.StatusNotFound, deleteAccountResponse.StatusCode)
+
+	if deleteAccountResponse.StatusCode != http.StatusConflict {
 		t.Errorf(msg)
 	}
 }

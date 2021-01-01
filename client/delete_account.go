@@ -6,7 +6,7 @@ import (
 )
 
 // DeleteAccount calls the form3 api with the specified accountID and version
-func DeleteAccount(host, accountID string, version int) (statusCode int) {
+func DeleteAccount(host, accountID string, version int) (*http.Response, error) {
 
 	fmt.Println("in DeleteAccount, id", accountID, "version", version)
 
@@ -19,19 +19,9 @@ func DeleteAccount(host, accountID string, version int) (statusCode int) {
 	req, err := http.NewRequest("DELETE", host+uri+accountID+"?version="+fmt.Sprint(version), nil)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return nil, err
 	}
 
 	// Fetch Request
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer resp.Body.Close()
-
-	// Display Response code
-	fmt.Println("response Status : ", resp.StatusCode)
-
-	return resp.StatusCode
+	return client.Do(req)
 }

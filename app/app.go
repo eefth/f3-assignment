@@ -37,7 +37,7 @@ func main() {
 	}
 
 	// delete an account
-	deleteAccountStatusCode := client.DeleteAccount(host, "b483e082-9b9e-4362-b2e1-69ddc0fc5b20", 0)
-	fmt.Printf("Delete account response status code %d", deleteAccountStatusCode)
+	deleteAccountResponse, _ := client.DeleteAccount(host, "b483e082-9b9e-4362-b2e1-69ddc0fc5b20", 0)
+	fmt.Printf("Delete account response status code %d", deleteAccountResponse.StatusCode)
 
 }
