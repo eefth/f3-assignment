@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -23,7 +24,7 @@ func newTestServer(path string, h func(w http.ResponseWriter, r *http.Request)) 
 }
 
 func TestCreateAccount_success(t *testing.T) {
-
+	// prepare
 	accountID := guuid.New().String()
 	organizationID := guuid.New().String()
 	account := CreateRequestBody(accountID, organizationID)
@@ -40,19 +41,21 @@ func TestCreateAccount_success(t *testing.T) {
 	defer server.Close()
 	response, _ := CreateAccount(server.URL, account)
 
-	createdAccount, _ := UnmarshallCreateAccountResponse(response)
+	// test & validate
+	createdAccount, err := UnmarshallCreateAccountResponse(response)
 
 	msg := fmt.Sprintf("TestCreateAccount failed. Status code expected to be %d but it was %d", http.StatusOK, response.StatusCode)
 
 	if response.StatusCode != 201 {
 		t.Errorf(msg)
 	}
+	assert.Nil(t, err)
 	assert.EqualValues(t, createdAccount.Cdata.ID, "0673746b-8dd3-4bd2-b398-941bdf2865df")
 	assert.EqualValues(t, createdAccount.Cdata.OrganisationID, "9864746b-8dd3-4bd2-b398-941bdf2865df")
 }
 
 func TestCreateAccount_whenForm3ApiReturns500_shouldReturn500(t *testing.T) {
-
+	// prepare
 	accountID := guuid.New().String()
 	organizationID := guuid.New().String()
 	account := CreateRequestBody(accountID, organizationID)
@@ -64,6 +67,8 @@ func TestCreateAccount_whenForm3ApiReturns500_shouldReturn500(t *testing.T) {
 	})
 
 	defer server.Close()
+
+	// test & validate
 	response, err := CreateAccount(server.URL, account)
 
 	msg := fmt.Sprintf("TestCreateAccount failed. Status code expected to be %d but it was %d", http.StatusInternalServerError, response.StatusCode)
@@ -73,10 +78,11 @@ func TestCreateAccount_whenForm3ApiReturns500_shouldReturn500(t *testing.T) {
 	}
 
 	assert.Nil(t, err)
+	assert.NotNil(t, response)
 }
 
 func TestCreateAccount_whenMarshallerFails_shouldReturnError(t *testing.T) {
-
+	// prepare
 	accountID := guuid.New().String()
 	organizationID := guuid.New().String()
 	account := CreateRequestBody(accountID, organizationID)
@@ -89,20 +95,52 @@ func TestCreateAccount_whenMarshallerFails_shouldReturnError(t *testing.T) {
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(body)
 	})
+	defer server.Close()
 
 	Marshaller = func(v interface{}) ([]byte, error) {
 		return nil, errors.New("Marshaller faillure")
 	}
 
-	defer server.Close()
-	_, err := CreateAccount(server.URL, account)
+	// test & validate
+	response, err := CreateAccount(server.URL, account)
 
+	assert.Nil(t, response)
 	assert.NotNil(t, err)
 	assert.EqualValues(t, fmt.Sprint(err), "Marshaller faillure")
 }
 
-func TestGetAccount_success(t *testing.T) {
+func TestCreateAccount_whenRequestCreatorFails_shouldReturnError(t *testing.T) {
+	// prepare
+	accountID := guuid.New().String()
+	organizationID := guuid.New().String()
+	account := CreateRequestBody(accountID, organizationID)
 
+	uri := "/v1/organisation/accounts/"
+
+	var body = GetAccountResponse{Gdata: Gdata{Type: "accounts", ID: "0673746b-8dd3-4bd2-b398-941bdf2865df", OrganisationID: "9864746b-8dd3-4bd2-b398-941bdf2865df"}}
+
+	server := newTestServer(uri, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(body)
+	})
+	defer server.Close()
+
+	Marshaller = json.Marshal
+
+	RequestCreator = func(method, url string, body io.Reader) (*http.Request, error) {
+		return nil, errors.New("RequestCreator faillure")
+	}
+
+	// test & validate
+	response, err := CreateAccount(server.URL, account)
+
+	assert.Nil(t, response)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, fmt.Sprint(err), "RequestCreator faillure")
+}
+
+func TestGetAccount_success(t *testing.T) {
+	// prepare
 	accountID := guuid.New().String()
 	uri := "/v1/organisation/accounts/"
 
@@ -114,6 +152,9 @@ func TestGetAccount_success(t *testing.T) {
 	})
 	defer server.Close()
 
+	RequestCreator = http.NewRequest
+
+	// test & validate
 	response, error := GetAccount(server.URL, accountID)
 
 	assert.Nil(t, error)
@@ -121,7 +162,7 @@ func TestGetAccount_success(t *testing.T) {
 }
 
 func TestGetAccount_whenForm3ApiReturnes500_shouldReturn500(t *testing.T) {
-
+	// prepare
 	accountID := guuid.New().String()
 	uri := "/v1/organisation/accounts/"
 
@@ -130,14 +171,37 @@ func TestGetAccount_whenForm3ApiReturnes500_shouldReturn500(t *testing.T) {
 	})
 	defer server.Close()
 
+	RequestCreator = http.NewRequest
+	// test & validate
 	getAccountResponse, err := GetAccount(server.URL, accountID)
 
 	assert.Nil(t, err)
 	assert.EqualValues(t, getAccountResponse.StatusCode, 500)
 }
 
-func TestListAccounts_success(t *testing.T) {
+func TestGetAccount_whenRequestCreatorFails_shouldReturnError(t *testing.T) {
+	// prepare
+	accountID := guuid.New().String()
+	uri := "/v1/organisation/accounts/"
 
+	server := newTestServer(uri, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	defer server.Close()
+
+	RequestCreator = func(method, url string, body io.Reader) (*http.Request, error) {
+		return nil, errors.New("RequestCreator faillure")
+	}
+	// test & validate
+	getAccountResponse, err := GetAccount(server.URL, accountID)
+
+	assert.Nil(t, getAccountResponse)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, fmt.Sprint(err), "RequestCreator faillure")
+}
+
+func TestListAccounts_success(t *testing.T) {
+	// prepare
 	pageNumber := 1
 	pageSize := 30
 	uri := "/v1/organisation/accounts"
@@ -150,8 +214,13 @@ func TestListAccounts_success(t *testing.T) {
 		json.NewEncoder(w).Encode(body)
 	})
 	defer server.Close()
+
+	RequestCreator = http.NewRequest
+
+	// test
 	getAccountsResponse, err := ListAccounts(server.URL, pageNumber, pageSize)
 
+	// validate
 	msg := fmt.Sprintf("TestListAccounts failed. Status code expected to be %d but it was %d", http.StatusOK, getAccountsResponse.StatusCode)
 
 	if getAccountsResponse.StatusCode != http.StatusOK {
@@ -167,7 +236,7 @@ func TestListAccounts_success(t *testing.T) {
 }
 
 func TestListAccounts_whenForm3Returns500_shouldReturn500(t *testing.T) {
-
+	// prepare
 	pageNumber := 1
 	pageSize := 30
 	uri := "/v1/organisation/accounts"
@@ -176,6 +245,10 @@ func TestListAccounts_whenForm3Returns500_shouldReturn500(t *testing.T) {
 		w.WriteHeader(http.StatusInternalServerError)
 	})
 	defer server.Close()
+
+	RequestCreator = http.NewRequest
+
+	// test & validate
 	getAccountsResponse, _ := ListAccounts(server.URL, pageNumber, pageSize)
 
 	msg := fmt.Sprintf("TestListAccounts failed. Status code expected to be %d but it was %d", http.StatusInternalServerError, getAccountsResponse.StatusCode)
@@ -185,8 +258,9 @@ func TestListAccounts_whenForm3Returns500_shouldReturn500(t *testing.T) {
 	}
 }
 
-func TestGatherAccounts_WhenListAccountsReturns500(t *testing.T) {
-
+func TestListAccounts_whenRequestCreatorFails_shouldReturnError(t *testing.T) {
+	// prepare
+	pageNumber := 1
 	pageSize := 30
 	uri := "/v1/organisation/accounts"
 
@@ -195,6 +269,31 @@ func TestGatherAccounts_WhenListAccountsReturns500(t *testing.T) {
 	})
 	defer server.Close()
 
+	RequestCreator = func(method, url string, body io.Reader) (*http.Request, error) {
+		return nil, errors.New("RequestCreator faillure")
+	}
+
+	// test & validate
+	response, err := ListAccounts(server.URL, pageNumber, pageSize)
+
+	assert.Nil(t, response)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, fmt.Sprint(err), "RequestCreator faillure")
+}
+
+func TestGatherAccounts_WhenListAccountsReturns500(t *testing.T) {
+	// prepare
+	pageSize := 30
+	uri := "/v1/organisation/accounts"
+
+	server := newTestServer(uri, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	})
+	defer server.Close()
+
+	RequestCreator = http.NewRequest
+
+	// test & validate
 	accounts := GatherAccounts(server.URL, pageSize)
 
 	if len(accounts) > 0 {
@@ -203,7 +302,7 @@ func TestGatherAccounts_WhenListAccountsReturns500(t *testing.T) {
 }
 
 func TestGatherAccounts_WhenListAccountsReturns200AndTwoResults(t *testing.T) {
-
+	// prepare
 	pageSize := 30
 	uri := "/v1/organisation/accounts"
 
@@ -216,6 +315,9 @@ func TestGatherAccounts_WhenListAccountsReturns200AndTwoResults(t *testing.T) {
 	})
 	defer server.Close()
 
+	RequestCreator = http.NewRequest
+
+	// test & validate
 	accounts := GatherAccounts(server.URL, pageSize)
 
 	if len(accounts) != 2 {
@@ -224,7 +326,7 @@ func TestGatherAccounts_WhenListAccountsReturns200AndTwoResults(t *testing.T) {
 }
 
 func TestDeleteAccount_success(t *testing.T) {
-
+	// prepare
 	accountID := guuid.New().String()
 	version := 0
 	uri := "/v1/organisation/accounts/"
@@ -233,6 +335,10 @@ func TestDeleteAccount_success(t *testing.T) {
 		w.WriteHeader(http.StatusNoContent)
 	})
 	defer server.Close()
+
+	RequestCreator = http.NewRequest
+
+	// test & validate
 	deleteAccountResponse, _ := DeleteAccount(server.URL, accountID, version)
 
 	msg := fmt.Sprintf("TestDeleteAccount failed. Status code expected to be %d but it was %d", http.StatusNoContent, deleteAccountResponse.StatusCode)
@@ -243,7 +349,7 @@ func TestDeleteAccount_success(t *testing.T) {
 }
 
 func TestDeleteAccount_whenForm3ApiReturns404_shouldReturn404(t *testing.T) {
-
+	// prepare
 	accountID := guuid.New().String()
 	version := 0
 	uri := "/v1/organisation/accounts/"
@@ -252,6 +358,10 @@ func TestDeleteAccount_whenForm3ApiReturns404_shouldReturn404(t *testing.T) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 	defer server.Close()
+
+	RequestCreator = http.NewRequest
+
+	// test & validate
 	deleteAccountResponse, _ := DeleteAccount(server.URL, accountID, version)
 
 	msg := fmt.Sprintf("TestDeleteAccount failed. Status code expected to be %d but it was %d", http.StatusNotFound, deleteAccountResponse.StatusCode)
@@ -262,7 +372,7 @@ func TestDeleteAccount_whenForm3ApiReturns404_shouldReturn404(t *testing.T) {
 }
 
 func TestDeleteAccount_whenForm3ApiReturns409_shouldReturn409(t *testing.T) {
-
+	// prepare
 	accountID := guuid.New().String()
 	version := 0
 	uri := "/v1/organisation/accounts/"
@@ -271,6 +381,10 @@ func TestDeleteAccount_whenForm3ApiReturns409_shouldReturn409(t *testing.T) {
 		w.WriteHeader(http.StatusConflict)
 	})
 	defer server.Close()
+
+	RequestCreator = http.NewRequest
+
+	// test & validate
 	deleteAccountResponse, _ := DeleteAccount(server.URL, accountID, version)
 
 	msg := fmt.Sprintf("TestDeleteAccount failed. Status code expected to be %d but it was %d", http.StatusNotFound, deleteAccountResponse.StatusCode)
@@ -280,12 +394,36 @@ func TestDeleteAccount_whenForm3ApiReturns409_shouldReturn409(t *testing.T) {
 	}
 }
 
-func TestCreateRequestBody_WithAccountIdAndOrganisationId(t *testing.T) {
+func TestDeleteAccount_whenRequestCreatorFails_shouldReturnError(t *testing.T) {
+	// prepare
+	accountID := guuid.New().String()
+	version := 0
+	uri := "/v1/organisation/accounts/"
 
+	server := newTestServer(uri, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	defer server.Close()
+
+	RequestCreator = func(method, url string, body io.Reader) (*http.Request, error) {
+		return nil, errors.New("RequestCreator faillure")
+	}
+
+	// test & validate
+	deleteAccountResponse, err := DeleteAccount(server.URL, accountID, version)
+
+	assert.Nil(t, deleteAccountResponse)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, fmt.Sprint(err), "RequestCreator faillure")
+}
+
+func TestCreateRequestBody_WithAccountIdAndOrganisationId(t *testing.T) {
+	// prepare
 	var actualAccountID, actualOrganisationID string
 	actualAccountID = guuid.New().String()
 	actualOrganisationID = guuid.New().String()
 
+	// test & validate
 	account := CreateRequestBody(actualAccountID, actualOrganisationID)
 
 	if actualAccountID != account.Cdata.ID {
@@ -297,7 +435,7 @@ func TestCreateRequestBody_WithAccountIdAndOrganisationId(t *testing.T) {
 }
 
 func TestUnmarshallCreateAccountResponse_success(t *testing.T) {
-
+	// prepare
 	actualAccountID := guuid.New().String()
 	actualOrganisationID := guuid.New().String()
 
@@ -311,15 +449,17 @@ func TestUnmarshallCreateAccountResponse_success(t *testing.T) {
 		Body:       body,
 	}
 
+	// test
 	accountFromResponse, err := UnmarshallCreateAccountResponse(response)
 
+	// validate
 	assert.Nil(t, err)
 	assert.EqualValues(t, actualAccountID, accountFromResponse.Cdata.ID)
 	assert.EqualValues(t, actualOrganisationID, accountFromResponse.Cdata.OrganisationID)
 }
 
 func TestUnmarshallCreateAccountResponse_whenUnmarshallerFails_returnsError(t *testing.T) {
-
+	// prepare
 	actualAccountID := guuid.New().String()
 	actualOrganisationID := guuid.New().String()
 
@@ -337,15 +477,17 @@ func TestUnmarshallCreateAccountResponse_whenUnmarshallerFails_returnsError(t *t
 		return errors.New("Unmarshaller faillure")
 	}
 
+	// test
 	accountFromResponse, err := UnmarshallCreateAccountResponse(response)
 
+	// validate
 	assert.Nil(t, accountFromResponse)
 	assert.NotNil(t, err)
 	assert.EqualValues(t, fmt.Sprint(err), "Unmarshaller faillure")
 }
 
-func TestUnmarshallGetAccountResponse(t *testing.T) {
-
+func TestUnmarshallGetAccountResponse_success(t *testing.T) {
+	// prepare
 	var getAccountResponse = GetAccountResponse{Gdata: Gdata{Type: "accounts", ID: "0673746b-8dd3-4bd2-b398-941bdf2865df"}}
 	jsonBytes, _ := json.Marshal(getAccountResponse)
 	body := ioutil.NopCloser(bytes.NewReader(jsonBytes))
@@ -357,6 +499,29 @@ func TestUnmarshallGetAccountResponse(t *testing.T) {
 
 	Unmarshaller = json.Unmarshal
 
-	accountFromResponse := UnmarshallGetAccountResponse(response)
+	// test & validate
+	accountFromResponse, err := UnmarshallGetAccountResponse(response)
 	assert.EqualValues(t, "0673746b-8dd3-4bd2-b398-941bdf2865df", accountFromResponse.Gdata.ID)
+	assert.Nil(t, err)
+}
+
+func TestUnmarshallGetAccountResponse_whenUnmarshallerFails_shouldReturnError(t *testing.T) {
+	// prepare
+	var getAccountResponse = GetAccountResponse{Gdata: Gdata{Type: "accounts", ID: "0673746b-8dd3-4bd2-b398-941bdf2865df"}}
+	jsonBytes, _ := json.Marshal(getAccountResponse)
+	body := ioutil.NopCloser(bytes.NewReader(jsonBytes))
+
+	response := &http.Response{
+		StatusCode: 201,
+		Body:       body,
+	}
+
+	Unmarshaller = func(data []byte, v interface{}) error {
+		return errors.New("Unmarshaller faillure")
+	}
+
+	// test & validate
+	accountFromResponse, err := UnmarshallGetAccountResponse(response)
+	assert.Nil(t, accountFromResponse)
+	assert.NotNil(t, err)
 }

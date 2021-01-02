@@ -16,7 +16,7 @@ func DeleteAccount(host, accountID string, version int) (*http.Response, error) 
 	client := &http.Client{}
 
 	// Create request
-	req, err := http.NewRequest("DELETE", host+uri+accountID+"?version="+fmt.Sprint(version), nil)
+	req, err := RequestCreator("DELETE", host+uri+accountID+"?version="+fmt.Sprint(version), nil)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

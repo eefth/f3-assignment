@@ -26,7 +26,7 @@ func main() {
 
 	// fetch the account
 	getAccountResponse, _ := client.GetAccount(host, accountID)
-	existingAccount := client.UnmarshallGetAccountResponse(getAccountResponse)
+	existingAccount, _ := client.UnmarshallGetAccountResponse(getAccountResponse)
 	fmt.Printf("Get Existing Account with AccountId %s", existingAccount.Gdata.ID)
 
 	// get all existing accounts in db and print them out

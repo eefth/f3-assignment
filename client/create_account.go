@@ -61,7 +61,7 @@ func CreateAccount(host string, account *Account) (*http.Response, error) {
 
 	uri := "/v1/organisation/accounts"
 
-	request, err := http.NewRequest(http.MethodPost, host+uri, bytes.NewReader(jsonBytes))
+	request, err := RequestCreator(http.MethodPost, host+uri, bytes.NewReader(jsonBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -74,10 +74,13 @@ func CreateAccount(host string, account *Account) (*http.Response, error) {
 // UnmarshallCreateAccountResponse returns the  Account struct from the http.Response
 func UnmarshallCreateAccountResponse(response *http.Response) (*Account, error) {
 
-	byteArr, _ := ioutil.ReadAll(response.Body)
+	byteArr, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	createdAccount := &Account{}
-	err := Unmarshaller(byteArr, &createdAccount)
+	err = Unmarshaller(byteArr, &createdAccount)
 	if err != nil {
 		return nil, err
 	}

@@ -42,8 +42,7 @@ func ListAccounts(host string, pageNumber, pageSize int) (*http.Response, error)
 
 	uri := "/v1/organisation/accounts?"
 
-	request, err := http.NewRequest(http.MethodGet, host+uri+"page[number]="+fmt.Sprint(pageNumber)+"&page[size]="+fmt.Sprint(pageSize), nil)
-
+	request, err := RequestCreator(http.MethodGet, host+uri+"page[number]="+fmt.Sprint(pageNumber)+"&page[size]="+fmt.Sprint(pageSize), nil)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
