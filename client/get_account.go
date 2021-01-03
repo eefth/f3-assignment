@@ -8,12 +8,14 @@ import (
 
 // Gattributes ...
 type Gattributes struct {
-	AlternativeBankAccountNames interface{} `json:"alternative_bank_account_names"`
-	BankID                      string      `json:"bank_id"`
-	BankIDCode                  string      `json:"bank_id_code"`
-	BaseCurrency                string      `json:"base_currency"`
-	Bic                         string      `json:"bic"`
-	Country                     string      `json:"country"`
+	BankID        string `json:"bank_id"`
+	BankIDCode    string `json:"bank_id_code"`
+	BaseCurrency  string `json:"base_currency"`
+	Bic           string `json:"bic"`
+	Country       string `json:"country"`
+	AccountNumber string `json:"account_number"`
+	Iban          string `json:"iban"`
+	Status        string `json:"status"`
 }
 
 // Gdata ...
@@ -27,15 +29,9 @@ type Gdata struct {
 	Version        int         `json:"version"`
 }
 
-// Glinks ...
-type Glinks struct {
-	Self string `json:"self"`
-}
-
 // GetAccountResponse  ...
 type GetAccountResponse struct {
-	Gdata  Gdata  `json:"data"`
-	Glinks Glinks `json:"links"`
+	Gdata Gdata `json:"data"`
 }
 
 // GetAccount calls the form3 api with the specified accountID
@@ -70,7 +66,7 @@ func UnmarshallGetAccountResponse(response *http.Response) (account *GetAccountR
 		return nil, err
 	}
 
-	fmt.Println("Created account", account)
+	fmt.Println("Got account", account)
 
 	return account, nil
 }

@@ -50,8 +50,8 @@ func TestCreateAccount_success(t *testing.T) {
 		t.Errorf(msg)
 	}
 	assert.Nil(t, err)
-	assert.EqualValues(t, createdAccount.Cdata.ID, "0673746b-8dd3-4bd2-b398-941bdf2865df")
-	assert.EqualValues(t, createdAccount.Cdata.OrganisationID, "9864746b-8dd3-4bd2-b398-941bdf2865df")
+	assert.EqualValues(t, "0673746b-8dd3-4bd2-b398-941bdf2865df", createdAccount.Cdata.ID)
+	assert.EqualValues(t, "9864746b-8dd3-4bd2-b398-941bdf2865df", createdAccount.Cdata.OrganisationID)
 }
 
 func TestCreateAccount_whenForm3ApiReturns500_shouldReturn500(t *testing.T) {
@@ -106,7 +106,7 @@ func TestCreateAccount_whenMarshallerFails_shouldReturnError(t *testing.T) {
 
 	assert.Nil(t, response)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, fmt.Sprint(err), "Marshaller faillure")
+	assert.EqualValues(t, "Marshaller faillure", fmt.Sprint(err))
 }
 
 func TestCreateAccount_whenRequestCreatorFails_shouldReturnError(t *testing.T) {
@@ -136,7 +136,7 @@ func TestCreateAccount_whenRequestCreatorFails_shouldReturnError(t *testing.T) {
 
 	assert.Nil(t, response)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, fmt.Sprint(err), "RequestCreator faillure")
+	assert.EqualValues(t, "RequestCreator faillure", fmt.Sprint(err))
 }
 
 func TestGetAccount_success(t *testing.T) {
@@ -158,7 +158,7 @@ func TestGetAccount_success(t *testing.T) {
 	response, error := GetAccount(server.URL, accountID)
 
 	assert.Nil(t, error)
-	assert.EqualValues(t, response.StatusCode, 200)
+	assert.EqualValues(t, 200, response.StatusCode)
 }
 
 func TestGetAccount_whenForm3ApiReturnes500_shouldReturn500(t *testing.T) {
@@ -176,7 +176,7 @@ func TestGetAccount_whenForm3ApiReturnes500_shouldReturn500(t *testing.T) {
 	getAccountResponse, err := GetAccount(server.URL, accountID)
 
 	assert.Nil(t, err)
-	assert.EqualValues(t, getAccountResponse.StatusCode, 500)
+	assert.EqualValues(t, 500, getAccountResponse.StatusCode)
 }
 
 func TestGetAccount_whenRequestCreatorFails_shouldReturnError(t *testing.T) {
@@ -197,7 +197,7 @@ func TestGetAccount_whenRequestCreatorFails_shouldReturnError(t *testing.T) {
 
 	assert.Nil(t, getAccountResponse)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, fmt.Sprint(err), "RequestCreator faillure")
+	assert.EqualValues(t, "RequestCreator faillure", fmt.Sprint(err))
 }
 
 func TestListAccounts_success(t *testing.T) {
@@ -231,8 +231,8 @@ func TestListAccounts_success(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.EqualValues(t, len(accounts.Data), 2)
-	assert.EqualValues(t, accounts.Data[0].ID, "0673746b-8dd3-4bd2-b398-941bdf2865df")
-	assert.EqualValues(t, accounts.Data[1].ID, "9673746b-8dd3-4bd2-b398-941bdf2865df")
+	assert.EqualValues(t, "0673746b-8dd3-4bd2-b398-941bdf2865df", accounts.Data[0].ID)
+	assert.EqualValues(t, "9673746b-8dd3-4bd2-b398-941bdf2865df", accounts.Data[1].ID)
 }
 
 func TestListAccounts_whenForm3Returns500_shouldReturn500(t *testing.T) {
@@ -278,7 +278,7 @@ func TestListAccounts_whenRequestCreatorFails_shouldReturnError(t *testing.T) {
 
 	assert.Nil(t, response)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, fmt.Sprint(err), "RequestCreator faillure")
+	assert.EqualValues(t, "RequestCreator faillure", fmt.Sprint(err))
 }
 
 func TestGatherAccounts_WhenListAccountsReturns500(t *testing.T) {
@@ -414,7 +414,7 @@ func TestDeleteAccount_whenRequestCreatorFails_shouldReturnError(t *testing.T) {
 
 	assert.Nil(t, deleteAccountResponse)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, fmt.Sprint(err), "RequestCreator faillure")
+	assert.EqualValues(t, "RequestCreator faillure", fmt.Sprint(err))
 }
 
 func TestCreateRequestBody_WithAccountIdAndOrganisationId(t *testing.T) {
@@ -454,8 +454,8 @@ func TestUnmarshallCreateAccountResponse_success(t *testing.T) {
 
 	// validate
 	assert.Nil(t, err)
-	assert.EqualValues(t, actualAccountID, accountFromResponse.Cdata.ID)
-	assert.EqualValues(t, actualOrganisationID, accountFromResponse.Cdata.OrganisationID)
+	assert.EqualValues(t, accountFromResponse.Cdata.ID, actualAccountID)
+	assert.EqualValues(t, accountFromResponse.Cdata.OrganisationID, actualOrganisationID)
 }
 
 func TestUnmarshallCreateAccountResponse_whenUnmarshallerFails_returnsError(t *testing.T) {
@@ -483,7 +483,7 @@ func TestUnmarshallCreateAccountResponse_whenUnmarshallerFails_returnsError(t *t
 	// validate
 	assert.Nil(t, accountFromResponse)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, fmt.Sprint(err), "Unmarshaller faillure")
+	assert.EqualValues(t, "Unmarshaller faillure", fmt.Sprint(err))
 }
 
 func TestUnmarshallGetAccountResponse_success(t *testing.T) {
@@ -525,7 +525,7 @@ func TestUnmarshallGetAccountResponse_whenUnmarshallerFails_shouldReturnError(t 
 
 	assert.Nil(t, accountFromResponse)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, fmt.Sprint(err), "Unmarshaller faillure")
+	assert.EqualValues(t, "Unmarshaller faillure", fmt.Sprint(err))
 }
 
 func TestUnmarshallGetAccountResponse_whenIOResponseBodyReaderFails_shouldReturnError(t *testing.T) {
@@ -550,7 +550,7 @@ func TestUnmarshallGetAccountResponse_whenIOResponseBodyReaderFails_shouldReturn
 
 	assert.Nil(t, accountFromResponse)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, fmt.Sprint(err), "IOResponseBodyReader faillure")
+	assert.EqualValues(t, "IOResponseBodyReader faillure", fmt.Sprint(err))
 }
 
 func TestUnmarshallCreateAccountResponse_whenIOResponseBodyReaderFails_returnsError(t *testing.T) {
@@ -580,7 +580,7 @@ func TestUnmarshallCreateAccountResponse_whenIOResponseBodyReaderFails_returnsEr
 	// validate
 	assert.Nil(t, accountFromResponse)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, fmt.Sprint(err), "IOResponseBodyReader faillure")
+	assert.EqualValues(t, "IOResponseBodyReader faillure", fmt.Sprint(err))
 }
 
 func TestUnmarshallGetAccountsResponse_whenIOResponseBodyReaderFails_returnsError(t *testing.T) {
@@ -606,5 +606,5 @@ func TestUnmarshallGetAccountsResponse_whenIOResponseBodyReaderFails_returnsErro
 	// validate
 	assert.Nil(t, result)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, fmt.Sprint(err), "IOResponseBodyReader faillure")
+	assert.EqualValues(t, "IOResponseBodyReader faillure", fmt.Sprint(err))
 }

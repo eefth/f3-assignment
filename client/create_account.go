@@ -13,11 +13,17 @@ type Account struct {
 
 // Cattributes ...
 type Cattributes struct {
-	Country      string `json:"country"`
-	BaseCurrency string `json:"base_currency"`
-	BankID       string `json:"bank_id"`
-	BankIDCode   string `json:"bank_id_code"`
-	Bic          string `json:"bic"`
+	Country                 string   `json:"country"`
+	BaseCurrency            string   `json:"base_currency"`
+	BankID                  string   `json:"bank_id"`
+	BankIDCode              string   `json:"bank_id_code"`
+	Bic                     string   `json:"bic"`
+	Name                    []string `json:"name"`
+	AlternativeNames        []string `json:"alternative_names"`
+	AccountClassification   string   `json:"account_classification"`
+	JointAccount            bool     `json:"joint_account"`
+	AccountMatchingOptOut   bool     `json:"account_matching_opt_out"`
+	SecondaryIdentification string   `json:"secondary_identification"`
 }
 
 // Cdata ...
@@ -37,11 +43,17 @@ func CreateRequestBody(accountID, organisationID string) (account *Account) {
 			ID:             accountID,
 			OrganisationID: organisationID,
 			Cattributes: Cattributes{
-				Country:      "GB",
-				BaseCurrency: "GBP",
-				BankID:       "400300",
-				BankIDCode:   "GBDSC",
-				Bic:          "NWBKGB22",
+				Country:                 "GB",
+				BaseCurrency:            "GBP",
+				BankID:                  "400300",
+				BankIDCode:              "GBDSC",
+				Bic:                     "NWBKGB22",
+				Name:                    []string{"Samantha Holder"},
+				AlternativeNames:        []string{"Sam Holder"},
+				AccountClassification:   "Personal",
+				JointAccount:            false,
+				AccountMatchingOptOut:   false,
+				SecondaryIdentification: "A1B2C3D4",
 			},
 		},
 	}
