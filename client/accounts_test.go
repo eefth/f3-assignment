@@ -227,7 +227,7 @@ func TestListAccounts_success(t *testing.T) {
 		t.Errorf(msg)
 	}
 
-	accounts := UnmarshallGetAccountsResponse(getAccountsResponse)
+	accounts, _ := UnmarshallGetAccountsResponse(getAccountsResponse)
 
 	assert.Nil(t, err)
 	assert.EqualValues(t, len(accounts.Data), 2)
@@ -522,6 +522,89 @@ func TestUnmarshallGetAccountResponse_whenUnmarshallerFails_shouldReturnError(t 
 
 	// test & validate
 	accountFromResponse, err := UnmarshallGetAccountResponse(response)
+
 	assert.Nil(t, accountFromResponse)
 	assert.NotNil(t, err)
+	assert.EqualValues(t, fmt.Sprint(err), "Unmarshaller faillure")
+}
+
+func TestUnmarshallGetAccountResponse_whenIOResponseBodyReaderFails_shouldReturnError(t *testing.T) {
+	// prepare
+	var getAccountResponse = GetAccountResponse{Gdata: Gdata{Type: "accounts", ID: "0673746b-8dd3-4bd2-b398-941bdf2865df"}}
+	jsonBytes, _ := json.Marshal(getAccountResponse)
+	body := ioutil.NopCloser(bytes.NewReader(jsonBytes))
+
+	response := &http.Response{
+		StatusCode: 201,
+		Body:       body,
+	}
+
+	Unmarshaller = json.Unmarshal
+
+	IOResponseBodyReader = func(r io.Reader) ([]byte, error) {
+		return nil, errors.New("IOResponseBodyReader faillure")
+	}
+
+	// test & validate
+	accountFromResponse, err := UnmarshallGetAccountResponse(response)
+
+	assert.Nil(t, accountFromResponse)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, fmt.Sprint(err), "IOResponseBodyReader faillure")
+}
+
+func TestUnmarshallCreateAccountResponse_whenIOResponseBodyReaderFails_returnsError(t *testing.T) {
+	// prepare
+	actualAccountID := guuid.New().String()
+	actualOrganisationID := guuid.New().String()
+
+	account := CreateRequestBody(actualAccountID, actualOrganisationID)
+
+	jsonBytes, _ := json.Marshal(account)
+	body := ioutil.NopCloser(bytes.NewReader(jsonBytes))
+
+	response := &http.Response{
+		StatusCode: 201,
+		Body:       body,
+	}
+
+	Unmarshaller = json.Unmarshal
+
+	IOResponseBodyReader = func(r io.Reader) ([]byte, error) {
+		return nil, errors.New("IOResponseBodyReader faillure")
+	}
+
+	// test
+	accountFromResponse, err := UnmarshallCreateAccountResponse(response)
+
+	// validate
+	assert.Nil(t, accountFromResponse)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, fmt.Sprint(err), "IOResponseBodyReader faillure")
+}
+
+func TestUnmarshallGetAccountsResponse_whenIOResponseBodyReaderFails_returnsError(t *testing.T) {
+	// prepare
+	var getAccountsResponse = GetAccountsResponse{Data: []Data{{Type: "accounts", ID: "0673746b-8dd3-4bd2-b398-941bdf2865df"},
+		{Type: "accounts", ID: "0673746b-8dd3-4bd2-b398-941bdf2865df"}}}
+
+	jsonBytes, _ := json.Marshal(getAccountsResponse)
+	body := ioutil.NopCloser(bytes.NewReader(jsonBytes))
+
+	response := &http.Response{
+		StatusCode: 201,
+		Body:       body,
+	}
+
+	IOResponseBodyReader = func(r io.Reader) ([]byte, error) {
+		return nil, errors.New("IOResponseBodyReader faillure")
+	}
+
+	// test
+	result, err := UnmarshallGetAccountsResponse(response)
+
+	// validate
+	assert.Nil(t, result)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, fmt.Sprint(err), "IOResponseBodyReader faillure")
 }

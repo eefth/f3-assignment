@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -53,14 +52,22 @@ func ListAccounts(host string, pageNumber, pageSize int) (*http.Response, error)
 }
 
 // UnmarshallGetAccountsResponse returns the  GetAccountsResponse struct from the http.Response
-func UnmarshallGetAccountsResponse(response *http.Response) (accounts *GetAccountsResponse) {
+func UnmarshallGetAccountsResponse(response *http.Response) (*GetAccountsResponse, error) {
 
-	byteArr, _ := ioutil.ReadAll(response.Body)
+	byteArr, err := IOResponseBodyReader(response.Body)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
 
-	accounts = &GetAccountsResponse{}
-	Unmarshaller(byteArr, &accounts)
+	accounts := &GetAccountsResponse{}
+	err = Unmarshaller(byteArr, &accounts)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
 
-	return accounts
+	return accounts, nil
 }
 
 // GatherAccounts gets the list of all existing accounts in db by calling
@@ -75,7 +82,7 @@ func GatherAccounts(host string, pageSize int) (allAccs []Data) {
 		getAccountsResponse, err := ListAccounts(host, pageNumber, pageSize)
 
 		listAccountsStatusCode = getAccountsResponse.StatusCode
-		accounts := UnmarshallGetAccountsResponse(getAccountsResponse)
+		accounts, err := UnmarshallGetAccountsResponse(getAccountsResponse)
 
 		if err == nil && listAccountsStatusCode == 200 && len(accounts.Data) > 0 {
 			for _, d := range accounts.Data {

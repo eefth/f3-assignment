@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -45,8 +44,7 @@ func GetAccount(host, accountID string) (*http.Response, error) {
 
 	uri := "/v1/organisation/accounts/" + accountID
 
-	request, err := http.NewRequest(http.MethodGet, host+uri, nil)
-
+	request, err := RequestCreator(http.MethodGet, host+uri, nil)
 	if err != nil {
 		fmt.Print(err)
 		return nil, err
@@ -57,13 +55,22 @@ func GetAccount(host, accountID string) (*http.Response, error) {
 }
 
 // UnmarshallGetAccountResponse returns the  GetAccountResponse struct from the http.Response
-func UnmarshallGetAccountResponse(response *http.Response) (account *GetAccountResponse) {
+func UnmarshallGetAccountResponse(response *http.Response) (account *GetAccountResponse, err error) {
 
-	byteArr, _ := ioutil.ReadAll(response.Body)
+	byteArr, err := IOResponseBodyReader(response.Body)
+	if err != nil {
+		fmt.Print(err)
+		return nil, err
+	}
 
 	account = &GetAccountResponse{}
-	Unmarshaller(byteArr, &account)
+	err = Unmarshaller(byteArr, &account)
+	if err != nil {
+		fmt.Print(err)
+		return nil, err
+	}
+
 	fmt.Println("Created account", account)
 
-	return account
+	return account, nil
 }

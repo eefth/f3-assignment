@@ -3,7 +3,6 @@ package client
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -74,7 +73,7 @@ func CreateAccount(host string, account *Account) (*http.Response, error) {
 // UnmarshallCreateAccountResponse returns the  Account struct from the http.Response
 func UnmarshallCreateAccountResponse(response *http.Response) (*Account, error) {
 
-	byteArr, err := ioutil.ReadAll(response.Body)
+	byteArr, err := IOResponseBodyReader(response.Body)
 	if err != nil {
 		return nil, err
 	}
