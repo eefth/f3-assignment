@@ -18,7 +18,7 @@ This file contains the functions used to list form3 Account resources with pagin
 #### inits.go
 This file contains some initialization variables that wrap build in go functions. These variables can be used to mock those functions.
 #### accounts_test.go
-This file contains the tests. Inside that file, the local form3 api has been mocked using the so called mux server.
+This file contains the tests. At the begining of that file there are the integration tests. There are also the junit tests where the local form3 api has been mocked using the so called mux server.
 In some cases json.Marshall, json.Unmarshall, http.NewRequest and ioutil.ReadAll are mocked too. Currently the test-coverage is about 100%, a value got from the VS Code go extension api.
 
 ### Package main
