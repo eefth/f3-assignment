@@ -34,10 +34,10 @@ The Dockerfile used to build the image which is used by docker-compose.yml, is a
 ## How to run the docker-compose and see the go tests running
 From the folder dockerCompose run the following: docker-compose up
 
-## How to run the application
+## How to run the client (optional)
 From the folder app run the following: go run app.go
 
-## How to run the tests without docker-compose if wanted
+## How to run the tests without docker-compose (optional)
 Apart from watching the tests running when you do docker-compose up, you can also run them with the following way:
 In the folder client run the following: 
 - run: docker-compose up
