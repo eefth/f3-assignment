@@ -15,93 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const host = "http://accountapi:8080"
-
-// integration tests
-
-func TestClient_createAccount_works(t *testing.T) {
-	// prepare
-	accountID := guuid.New().String()
-	organizationID := guuid.New().String()
-	account := CreateRequestBody(accountID, organizationID)
-
-	// test & validate
-	response, _ := CreateAccount(host, account)
-
-	createdAccount, err := UnmarshallCreateAccountResponse(response)
-
-	msg := fmt.Sprintf("TestCreateAccount failed. Status code expected to be %d but it was %d", http.StatusOK, response.StatusCode)
-
-	if response.StatusCode != 201 {
-		t.Errorf(msg)
-	}
-	assert.Nil(t, err)
-	assert.EqualValues(t, accountID, createdAccount.Cdata.ID)
-	assert.EqualValues(t, organizationID, createdAccount.Cdata.OrganisationID)
-}
-
-func TestClient_listAccounts_works(t *testing.T) {
-	// prepare
-	pageNumber := 1
-	pageSize := 30
-	// test
-	getAccountsResponse, err := ListAccounts(host, pageNumber, pageSize)
-
-	// validate
-	msg := fmt.Sprintf("TestListAccounts failed. Status code expected to be %d but it was %d", http.StatusOK, getAccountsResponse.StatusCode)
-
-	if getAccountsResponse.StatusCode != http.StatusOK {
-		t.Errorf(msg)
-	}
-	assert.Nil(t, err)
-}
-
-func TestClient_deleteAccount_works(t *testing.T) {
-	// prepare
-	accountID := guuid.New().String()
-	organizationID := guuid.New().String()
-	account := CreateRequestBody(accountID, organizationID)
-	_, _ = CreateAccount(host, account)
-
-	// test & validate
-	version := 0
-	deleteAccountResponse, err := DeleteAccount(host, accountID, version)
-
-	msg := fmt.Sprintf("TestDeleteAccount failed. Status code expected to be one of 204, 409 but it was %d", deleteAccountResponse.StatusCode)
-
-	if deleteAccountResponse.StatusCode != http.StatusNoContent && deleteAccountResponse.StatusCode != http.StatusConflict {
-		t.Errorf(msg)
-	}
-	assert.Nil(t, err)
-}
-
-func TestClient_getAccount_works(t *testing.T) {
-	// prepare
-	accountID := guuid.New().String()
-	organizationID := guuid.New().String()
-	account := CreateRequestBody(accountID, organizationID)
-	_, _ = CreateAccount(host, account)
-	// test & validate
-	response, error := GetAccount(host, accountID)
-
-	getAccountResponse, error2 := UnmarshallGetAccountResponse(response)
-
-	msg := fmt.Sprintf("TestDeleteAccount failed. Status code expected to be one of 200 or 404 but it was %d", response.StatusCode)
-	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusNotFound {
-		t.Errorf(msg)
-	}
-	assert.Nil(t, error)
-	assert.Nil(t, error2)
-	assert.EqualValues(t, 200, response.StatusCode)
-	assert.EqualValues(t, accountID, getAccountResponse.Gdata.ID)
-	assert.EqualValues(t, organizationID, getAccountResponse.Gdata.OrganisationID)
-	assert.EqualValues(t, "accounts", getAccountResponse.Gdata.Type)
-	assert.EqualValues(t, "400300", getAccountResponse.Gdata.Gattributes.BankID)
-	assert.EqualValues(t, "GBDSC", getAccountResponse.Gdata.Gattributes.BankIDCode)
-	assert.EqualValues(t, "NWBKGB22", getAccountResponse.Gdata.Gattributes.Bic)
-	assert.EqualValues(t, "GBP", getAccountResponse.Gdata.Gattributes.BaseCurrency)
-	assert.EqualValues(t, "GB", getAccountResponse.Gdata.Gattributes.Country)
-}
+const host = "http://accountapi:8080" // used in integration tests
 
 // unit tests
 
@@ -697,4 +611,114 @@ func TestUnmarshallGetAccountsResponse_whenIOResponseBodyReaderFails_returnsErro
 	assert.Nil(t, result)
 	assert.NotNil(t, err)
 	assert.EqualValues(t, "IOResponseBodyReader faillure", fmt.Sprint(err))
+}
+
+// integration tests
+
+func TestClient_createAccount_works(t *testing.T) {
+	// prepare
+	accountID := guuid.New().String()
+	organizationID := guuid.New().String()
+	account := CreateRequestBody(accountID, organizationID)
+
+	// restore inits
+	Marshaller = json.Marshal
+	Unmarshaller = json.Unmarshal
+	RequestCreator = http.NewRequest
+	IOResponseBodyReader = ioutil.ReadAll
+
+	// test & validate
+	response, _ := CreateAccount(host, account)
+
+	createdAccount, err := UnmarshallCreateAccountResponse(response)
+
+	msg := fmt.Sprintf("TestCreateAccount failed. Status code expected to be %d but it was %d", http.StatusOK, response.StatusCode)
+
+	if response.StatusCode != 201 {
+		t.Errorf(msg)
+	}
+	assert.Nil(t, err)
+	assert.EqualValues(t, accountID, createdAccount.Cdata.ID)
+	assert.EqualValues(t, organizationID, createdAccount.Cdata.OrganisationID)
+	assert.EqualValues(t, "GB", createdAccount.Cdata.Cattributes.Country)
+	assert.EqualValues(t, "GBP", createdAccount.Cdata.Cattributes.BaseCurrency)
+	assert.EqualValues(t, "400300", createdAccount.Cdata.Cattributes.BankID)
+	assert.EqualValues(t, "GBDSC", createdAccount.Cdata.Cattributes.BankIDCode)
+	assert.EqualValues(t, "NWBKGB22", createdAccount.Cdata.Cattributes.Bic)
+}
+
+func TestClient_listAccounts_works(t *testing.T) {
+	// prepare
+	pageNumber := 1
+	pageSize := 30
+	// create 2 accounts
+	accountID1 := guuid.New().String()
+	organizationID1 := guuid.New().String()
+	account1 := CreateRequestBody(accountID1, organizationID1)
+	_, _ = CreateAccount(host, account1)
+	accountID2 := guuid.New().String()
+	organizationID2 := guuid.New().String()
+	account2 := CreateRequestBody(accountID2, organizationID2)
+	_, _ = CreateAccount(host, account2)
+
+	// test
+	getAccountsResponse, err := ListAccounts(host, pageNumber, pageSize)
+
+	// validate
+	accounts, _ := UnmarshallGetAccountsResponse(getAccountsResponse)
+
+	msg := fmt.Sprintf("TestListAccounts failed. Status code expected to be %d but it was %d", http.StatusOK, getAccountsResponse.StatusCode)
+
+	if getAccountsResponse.StatusCode != http.StatusOK {
+		t.Errorf(msg)
+	}
+	assert.Nil(t, err)
+	assert.GreaterOrEqual(t, len(accounts.Data), 2)
+}
+
+func TestClient_deleteAccount_works(t *testing.T) {
+	// prepare
+	accountID := guuid.New().String()
+	organizationID := guuid.New().String()
+	account := CreateRequestBody(accountID, organizationID)
+	_, _ = CreateAccount(host, account)
+
+	// test & validate
+	version := 0
+	deleteAccountResponse, err := DeleteAccount(host, accountID, version)
+
+	msg := fmt.Sprintf("TestDeleteAccount failed. Status code expected to be one of 204, 409 but it was %d", deleteAccountResponse.StatusCode)
+
+	if deleteAccountResponse.StatusCode != http.StatusNoContent && deleteAccountResponse.StatusCode != http.StatusConflict {
+		t.Errorf(msg)
+	}
+	assert.Nil(t, err)
+}
+
+func TestClient_getAccount_works(t *testing.T) {
+	// prepare
+	accountID := guuid.New().String()
+	organizationID := guuid.New().String()
+	account := CreateRequestBody(accountID, organizationID)
+	_, _ = CreateAccount(host, account)
+	// test & validate
+	response, error := GetAccount(host, accountID)
+
+	getAccountResponse, error2 := UnmarshallGetAccountResponse(response)
+
+	msg := fmt.Sprintf("TestDeleteAccount failed. Status code expected to be one of 200 or 404 but it was %d", response.StatusCode)
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusNotFound {
+		t.Errorf(msg)
+	}
+	assert.Nil(t, error)
+	assert.Nil(t, error2)
+	assert.EqualValues(t, 200, response.StatusCode)
+	assert.EqualValues(t, accountID, getAccountResponse.Gdata.ID)
+	assert.EqualValues(t, organizationID, getAccountResponse.Gdata.OrganisationID)
+	assert.EqualValues(t, "accounts", getAccountResponse.Gdata.Type)
+	assert.EqualValues(t, "400300", getAccountResponse.Gdata.Gattributes.BankID)
+	assert.EqualValues(t, "GBDSC", getAccountResponse.Gdata.Gattributes.BankIDCode)
+	assert.EqualValues(t, "NWBKGB22", getAccountResponse.Gdata.Gattributes.Bic)
+	assert.EqualValues(t, "GBP", getAccountResponse.Gdata.Gattributes.BaseCurrency)
+	assert.EqualValues(t, "GB", getAccountResponse.Gdata.Gattributes.Country)
 }
