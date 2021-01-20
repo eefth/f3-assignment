@@ -1,4 +1,4 @@
-# f3-go
+# f3-assignment
 
 ## Project architecture
 Source code resides in 2 folders: app and client. The app folder contains the main method, which calls the functions existing in the client folder.
